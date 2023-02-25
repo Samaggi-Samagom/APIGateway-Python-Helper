@@ -173,6 +173,9 @@ class Arguments:
     def available(self):
         return self._arguments is not None
 
+    def should_error(self):
+        return not self.available() or not self.contains_requirements()
+
     def _get_arguments(self, event: Dict[str, Any]):
         cleaned_body = event["body"].replace("\n", "")
         try:
