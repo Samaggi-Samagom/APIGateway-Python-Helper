@@ -220,6 +220,12 @@ class Arguments:
         else:
             raise TypeError("`require()` must be supplied with type list or dict.")
 
+        if self.error is None and not self.contains_requirements():
+            self.error = MissingArguments(
+                expects=self.requirements(),
+                got=self.keys()
+            )
+
     def requirements(self):
         return self._required_args
 
