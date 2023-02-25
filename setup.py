@@ -11,6 +11,6 @@ setup(
    long_description=long_description,
    author='Pakkapol Lailert',
    author_email='booklailert@gmail.com',
-   packages=['APIGateway'],
+   packages=['APIGatewayInterface'],
    install_requires=[],
 )
