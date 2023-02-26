@@ -32,12 +32,13 @@ class Response(ABC):
         }
         return data
 
-    @staticmethod
-    def _clean_keys(d: Dict[str, Any]):
+    def _clean_keys(self, d: Dict[str, Any]):
         new_dict = {}
         for k, v in d.items():
             if isinstance(k, decimal.Decimal):
-                new_dict[float(k)] = v
+                k = float(k)
+            if isinstance(v, dict):
+                new_dict[k] = self._clean_keys(v)
             else:
                 new_dict[k] = v
         return new_dict
