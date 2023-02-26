@@ -35,9 +35,14 @@ class APIGatewayTestResponse:
         return json.dumps(d, sort_keys=True, indent=4)
 
 
-def post_to(func: Callable[[Dict[str, Any], Any], Dict[str, Any]], data: Dict[str, Any], context: Any = None) -> \
-        APIGatewayTestResponse:
-    return APIGatewayTestResponse(func(event_from_dict(data), context), func.__name__)
+def post_to(func: Callable[[Dict[str, Any], Any], Dict[str, Any]], data: Dict[str, Any], context: Any = None,
+            quiet: bool = False) -> APIGatewayTestResponse:
+    if not quiet:
+        print(f"\n\n ------ Executing {func.__name__} ------ \n\n")
+    res = APIGatewayTestResponse(func(event_from_dict(data), context), func.__name__)
+    if not quiet:
+        print(f"\n\n ------ End of Execution ------ \n\n")
+    return res
 
 
 def event_from_dict(data: Dict[str, Any]) -> Dict[str, Any]:
