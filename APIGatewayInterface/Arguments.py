@@ -1,4 +1,4 @@
-from Responses import MissingArguments, BadRequest
+from APIGatewayInterface.Responses import MissingArguments, BadRequest
 from typing import Dict, List, Any
 import json
 
