@@ -18,11 +18,18 @@ class APIGatewayTestResponse:
 
     def __str__(self):
         if self.status_code == 200:
-            return f"Function Returned HTTP {self.status_code} with message \"{self.message}\".\nData: {self.data}."
+            return f"\n\n ------ Result ------\n\n" \
+                   f"Function Returned HTTP {self.status_code} with message \"{self.message}\".\n" \
+                   f"Data: {self.__pretty(self.data)}."
         else:
-            return f"Function Returned Error with HTTP code {self.status_code} and message \"{self.message}\".\nThe " \
+            return f"\n\n ------ Result ------\n\n" \
+                f"Function Returned Error with HTTP code {self.status_code} and message \"{self.message}\".\nThe " \
                    f"reason for the error is {self.data['reason'] if 'reason' in self.data else 'not provided'}.\n" \
-                   f"Error Data: {self.data['data']}"
+                   f"Error Data: {self.__pretty(self.data['data'])}"
+
+    @staticmethod
+    def __pretty(d: Dict[str, Any]) -> str:
+        return json.dumps(d, sort_keys=True, indent=4)
 
 
 def post_to(func: Callable[[Dict[str, Any], Any], Dict[str, Any]], data: Dict[str, Any], context: Any = None) -> \
