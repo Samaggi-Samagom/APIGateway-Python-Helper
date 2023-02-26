@@ -4,7 +4,8 @@ from typing import Dict, Any, Callable
 
 class APIGatewayTestResponse:
 
-    def __init__(self, data):
+    def __init__(self, data: str):
+        data = json.loads(data)
         self.body = data["body"]
         self.data = self.body["data"] if "data" in self.body else None
         self.message = self.body["message"] if "message" in self.body else None
@@ -25,7 +26,7 @@ class APIGatewayTestResponse:
                    f"Error Data: {self.data['data']}"
 
 
-def post_to(func: Callable[[Dict[str, Any], Any], Dict[str, Any]], data: Dict[str, Any], context: Any = None) -> \
+def post_to(func: Callable[[Dict[str, Any], Any], str], data: Dict[str, Any], context: Any = None) -> \
         APIGatewayTestResponse:
     return APIGatewayTestResponse(func(event_from_dict(data), context))
 
