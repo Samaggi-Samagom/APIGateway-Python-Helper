@@ -32,7 +32,19 @@ class Response(ABC):
         }
         return data
 
+    @staticmethod
+    def _clean_keys(d: Dict[str, Any]):
+        new_dict = {}
+        for k, v in d.items():
+            if isinstance(k, decimal.Decimal):
+                new_dict[float(k)] = v
+            else:
+                new_dict[k] = v
+        return new_dict
+
     def _raw_response(self, data: Dict[str, Any], allow_cors: bool):
+        data = self._clean_keys(data)
+
         data = {
                 "statusCode": self.status_code(),
                 "body": json.dumps({
