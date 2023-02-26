@@ -1,4 +1,4 @@
-from APIGatewayInterface.Responses import MissingArguments, BadRequest
+from APIGatewayInterface.Responses import MissingArguments, BadRequest, response
 from typing import Dict, List, Any
 import json
 
@@ -21,13 +21,13 @@ class Arguments:
         try:
             return json.loads(cleaned_body)
         except json.decoder.JSONDecodeError as e:
-            self.error = BadRequest(
+            self.error = response(BadRequest(
                 reason="Unable to parse JSON request.",
                 data={
                     "rawData": event["body"],
                     "error": str(e.msg)
                 }
-            )
+            ))
             return None
 
     def contains(self, expected_parameters: List[str]):
@@ -61,10 +61,10 @@ class Arguments:
             raise TypeError("`require()` must be supplied with type list or dict.")
 
         if self.error is None and not self.contains_requirements():
-            self.error = MissingArguments(
+            self.error = response(MissingArguments(
                 expects=self.requirements(),
                 got=self.keys()
-            )
+            ))
 
     def requirements(self):
         return self._required_args

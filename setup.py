@@ -5,7 +5,7 @@ with open("README.md", 'r') as f:
 
 setup(
    name='APIGatewayHelper',
-   version='1.1.1b',
+   version='1.1.1c',
    description='Code for extracting arguments from POST requests to API Gateway and for returning values through '
                'API Gateway',
    long_description=long_description,
