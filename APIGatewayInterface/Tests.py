@@ -21,7 +21,7 @@ class APIGatewayTestResponse:
         if self.status_code == 200:
             return f"\n\n ------ Result from {self.function_name} ------\n\n" \
                    f"Function Returned HTTP {self.status_code} with message \"{self.message}\".\n" \
-                   f"Data: {self.__pretty(self.data)}." \
+                   f"Data: {self.__pretty(self.data)}\n\n" \
                    f"------ End of Result ------ \n\n"
         else:
             return f"\n\n ------ Result from {self.function_name} ------\n\n" \
