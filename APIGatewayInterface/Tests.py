@@ -1,5 +1,6 @@
 import json
 from typing import Dict, Any, Callable
+from APIGatewayInterface.Responses import DecimalEncoder
 
 
 class APIGatewayTestResponse:
@@ -32,7 +33,7 @@ class APIGatewayTestResponse:
 
     @staticmethod
     def __pretty(d: Dict[str, Any]) -> str:
-        return json.dumps(d, sort_keys=True, indent=4)
+        return json.dumps(d, sort_keys=True, indent=4, cls=DecimalEncoder)
 
 
 def post_to(func: Callable[[Dict[str, Any], Any], Dict[str, Any]], data: Dict[str, Any], context: Any = None,
