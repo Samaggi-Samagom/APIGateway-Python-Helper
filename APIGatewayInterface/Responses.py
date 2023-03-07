@@ -120,6 +120,9 @@ class MissingArguments(BadRequest):
 
 class NotFound(ErrorResponse):
 
+    def __init__(self, reason: str, value: str, at: str):
+        super().__init__(reason, {"value": value, "at": at})
+
     @staticmethod
     def status_code():
         return 404
