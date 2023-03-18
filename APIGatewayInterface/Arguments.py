@@ -11,11 +11,16 @@ class Arguments:
         self.error = None
         self._arguments = self._get_arguments(event)
         self.__enforce_access = strict_access
+        self.__has_requirements = False
+        self.__checked_available = False
+        self.__checked_requirements = False
 
     def available(self):
+        self.__checked_available = True
         return self._arguments is not None
 
     def should_error(self):
+        self.__checked_requirements = True
         return not self.available() or not self.contains_requirements()
 
     def _get_arguments(self, event: Dict[str, Any]):
@@ -36,6 +41,9 @@ class Arguments:
         return all(x in self._arguments for x in expected_parameters)
 
     def contains_requirements(self):
+        if not self.__checked_available and self.__enforce_access:
+            raise RuntimeError("Must check if arguments are available before checking requirements.")
+        self.__checked_requirements = True
         return all(x in self._arguments for x in self._required_args)
 
     @classmethod
@@ -64,6 +72,8 @@ class Arguments:
         else:
             raise TypeError("`require()` must be supplied with type list or dict.")
 
+        self.__has_requirements = True
+
         if self.error is None and not self.contains_requirements():
             self.error = response(MissingArguments(
                 expects=self.requirements(),
@@ -85,6 +95,10 @@ class Arguments:
         return self._optional_args
 
     def __getitem__(self, item):
+        if self.__enforce_access and (not self.__checked_available or self.__checked_requirements):
+            raise RuntimeError("Accessing arguments before checking availability or requirements is potentially "
+                               "unsafe. Consider checking `.available()` then `.contains_requirements()` or use "
+                               "`.should_error()` before accessing first argument.")
         if self.__enforce_access and (item not in self._required_args.keys() and item not in self._optional_args):
             raise KeyError(f"Trying to access\"{item}\" which is not required nor optional.")
         return self._arguments[item]
