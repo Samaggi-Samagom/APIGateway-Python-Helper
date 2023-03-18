@@ -86,7 +86,7 @@ class Arguments:
 
     def __getitem__(self, item):
         if self.__enforce_access and (item not in self._required_args.keys() and item not in self._optional_args):
-            raise KeyError(f"Trying to access {item} which is not required nor optional.")
+            raise KeyError(f"Trying to access\"{item}\" which is not required nor optional.")
         return self._arguments[item]
 
     def get(self, item):
