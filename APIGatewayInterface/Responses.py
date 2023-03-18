@@ -1,5 +1,6 @@
+from __future__ import annotations
 from abc import ABC, abstractmethod
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Optional
 import json
 import decimal
 
@@ -114,8 +115,25 @@ class BadRequest(ErrorResponse):
 
 class MissingArguments(BadRequest):
 
-    def __init__(self, expects: List[str], got: List[str]):
-        super().__init__("Missing Arguments", {"expects": list(expects), "got": list(got)})
+    @classmethod
+    def __dict_to_list_req(cls, x: Dict[str, dict | str | None]):
+        res = []
+        for k, v in x.items():
+            if v is None:
+                res.append(k)
+            elif type(v) != dict:
+                res.append((k, v))
+            else:
+                res.append((k, cls.__dict_to_list_req(v)))
+        return res
+
+    def __init__(self, expects: List[str] | Dict[str, dict | str | None], got: List[str]):
+        if type(expects) == dict:
+            expects = self.__dict_to_list_req(expects)
+            print(expects)
+            super().__init__("Missing Arguments", {"expects": expects, "got": list(got)})
+        else:
+            super().__init__("Missing Arguments", {"expects": list(expects), "got": list(got)})
 
 
 class NotFound(ErrorResponse):
