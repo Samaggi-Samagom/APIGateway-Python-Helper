@@ -44,6 +44,13 @@ class Arguments:
         if not self.__checked_available and self.__enforce_access:
             raise RuntimeError("Must check if arguments are available before checking requirements.")
         self.__checked_requirements = True
+
+        if self.error is None and not self.contains_requirements():
+            self.error = response(MissingArguments(
+                expects=self.requirements(),
+                got=self.keys()
+            ))
+
         return all(x in self._arguments for x in self._required_args)
 
     @classmethod
@@ -70,15 +77,9 @@ class Arguments:
         elif type(x) is list:
             self._required_args = dict((e, None) for e in x)
         else:
-            raise TypeError("`require()` must be supplied with type list or dict.")
+            raise TypeError("`require()` must be supplied with type str or list or dict.")
 
         self.__has_requirements = True
-
-        if self.error is None and not self.contains_requirements():
-            self.error = response(MissingArguments(
-                expects=self.requirements(),
-                got=self.keys()
-            ))
 
     def optional(self, x):
         if type(x) is str:
@@ -86,7 +87,7 @@ class Arguments:
         elif type(x) is list:
             self._optional_args = x
         else:
-            raise TypeError()
+            raise TypeError("`optional()` must be supplied with type str or list.")
 
     def requirements(self):
         return self._required_args
@@ -95,7 +96,8 @@ class Arguments:
         return self._optional_args
 
     def __getitem__(self, item):
-        if self.__enforce_access and (not self.__checked_available or self.__checked_requirements):
+        if self.__enforce_access and self.__has_requirements and \
+                (not self.__checked_available or self.__checked_requirements):
             raise RuntimeError("Accessing arguments before checking availability or requirements is potentially "
                                "unsafe. Consider checking `.available()` then `.contains_requirements()` or use "
                                "`.should_error()` before accessing first argument.")
