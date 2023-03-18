@@ -5,10 +5,12 @@ import json
 
 class Arguments:
 
-    def __init__(self, event: Dict[str, Any]):
+    def __init__(self, event: Dict[str, Any], strict_access: bool = True):
         self._required_args = None
+        self._optional_args = None
         self.error = None
         self._arguments = self._get_arguments(event)
+        self.__enforce_access = strict_access
 
     def available(self):
         return self._arguments is not None
@@ -53,7 +55,9 @@ class Arguments:
         return self._arguments.keys()
 
     def require(self, x):
-        if type(x) is dict:
+        if type(x) is str:
+            self._required_args = {x: None}
+        elif type(x) is dict:
             self._required_args = x
         elif type(x) is list:
             self._required_args = dict((e, None) for e in x)
@@ -66,10 +70,23 @@ class Arguments:
                 got=self.keys()
             ))
 
+    def optional(self, x):
+        if type(x) is str:
+            self._optional_args = [x]
+        elif type(x) is list:
+            self._optional_args = x
+        else:
+            raise TypeError()
+
     def requirements(self):
         return self._required_args
 
+    def optionals(self):
+        return self._optional_args
+
     def __getitem__(self, item):
+        if self.__enforce_access and (item not in self._required_args and item not in self._optional_args):
+            raise KeyError(f"Trying to access {item} which is not required nor optional.")
         return self._arguments[item]
 
     def get(self, item):
