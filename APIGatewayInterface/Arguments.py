@@ -20,7 +20,6 @@ class Arguments:
         return self._arguments is not None
 
     def should_error(self):
-        self.__checked_requirements = True
         return not self.available() or not self.contains_requirements()
 
     def _get_arguments(self, event: Dict[str, Any]):
@@ -100,7 +99,7 @@ class Arguments:
 
     def __getitem__(self, item):
         if self.__enforce_access and self.__has_requirements and \
-                (not self.__checked_available or self.__checked_requirements):
+                (not self.__checked_available or not self.__checked_requirements):
             raise RuntimeError("Accessing arguments before checking availability or requirements is potentially "
                                "unsafe. Consider checking `.available()` then `.contains_requirements()` or use "
                                "`.should_error()` before accessing first argument.")
