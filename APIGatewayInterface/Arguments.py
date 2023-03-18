@@ -6,8 +6,8 @@ import json
 class Arguments:
 
     def __init__(self, event: Dict[str, Any], strict_access: bool = True):
-        self._required_args = None
-        self._optional_args = None
+        self._required_args = {}
+        self._optional_args = []
         self.error = None
         self._arguments = self._get_arguments(event)
         self.__enforce_access = strict_access
@@ -85,7 +85,7 @@ class Arguments:
         return self._optional_args
 
     def __getitem__(self, item):
-        if self.__enforce_access and (item not in self._required_args and item not in self._optional_args):
+        if self.__enforce_access and (item not in self._required_args.keys() and item not in self._optional_args):
             raise KeyError(f"Trying to access {item} which is not required nor optional.")
         return self._arguments[item]
 
