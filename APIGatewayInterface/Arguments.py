@@ -43,15 +43,18 @@ class Arguments:
     def contains_requirements(self):
         if not self.__checked_available and self.__enforce_access:
             raise RuntimeError("Must check if arguments are available before checking requirements.")
-        self.__checked_requirements = True
 
-        if self.error is None and not self.contains_requirements():
+        contains_requirements = all(x in self._arguments for x in self._required_args)
+
+        if not self.__checked_requirements and self.error is None and not contains_requirements:
             self.error = response(MissingArguments(
                 expects=self.requirements(),
                 got=self.keys()
             ))
 
-        return all(x in self._arguments for x in self._required_args)
+        self.__checked_requirements = True
+
+        return contains_requirements
 
     @classmethod
     def __has_keys(cls, in_dict: Dict[str, Any], keys: Dict[str, dict]):
