@@ -44,12 +44,12 @@ class Arguments:
         if not self.__checked_available and self.__enforce_access:
             raise RuntimeError("Must check if arguments are available before checking requirements.")
 
-        contains_requirements = all(x in self._arguments for x in self._required_args)
+        contains_requirements = self.__has_keys(self._arguments, self._required_args)
 
         if not self.__checked_requirements and self.error is None and not contains_requirements:
             self.error = response(MissingArguments(
                 expects=self.requirements(),
-                got=self.keys()
+                got=self.keys(include_nested=True)
             ))
 
         self.__checked_requirements = True
@@ -69,8 +69,21 @@ class Arguments:
                     contains.append(key in in_dict.keys() and cls.__has_keys(in_dict[key], inner_key))
         return all(contains)
 
-    def keys(self):
-        return self._arguments.keys()
+    @classmethod
+    def __nested_keys(cls, x: Dict[str: Any]):
+        res = []
+        for k, v in x.items():
+            if type(v) != dict:
+                res.append(k)
+            else:
+                res.append((k, cls.__nested_keys(v)))
+        return res
+
+    def keys(self, include_nested: bool = False):
+        if not include_nested:
+            return self._arguments.keys()
+        else:
+            return self.__nested_keys(self._arguments)
 
     @staticmethod
     def __separate_dict(x: dict) -> List[dict]:
