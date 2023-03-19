@@ -130,7 +130,6 @@ class MissingArguments(BadRequest):
     def __init__(self, expects: List[str] | Dict[str, dict | str | None], got: List[str]):
         if type(expects) == dict:
             expects = self.__dict_to_list_req(expects)
-            print(expects)
             super().__init__("Missing Arguments", {"expects": expects, "got": list(got)})
         else:
             super().__init__("Missing Arguments", {"expects": list(expects), "got": list(got)})

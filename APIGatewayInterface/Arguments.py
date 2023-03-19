@@ -1,3 +1,4 @@
+from __future__ import annotations
 from APIGatewayInterface.Responses import MissingArguments, BadRequest, response
 from typing import Dict, List, Any
 import json
@@ -71,17 +72,37 @@ class Arguments:
     def keys(self):
         return self._arguments.keys()
 
-    def require(self, x):
-        if type(x) is str:
-            self._required_args = {x: None}
-        elif type(x) is dict:
-            self._required_args = x
-        elif type(x) is list:
-            self._required_args = dict((e, None) for e in x)
-        else:
-            raise TypeError("`require()` must be supplied with type str or list or dict.")
+    @staticmethod
+    def __separate_dict(x: dict) -> List[dict]:
+        res = []
+        for k, v in x.items():
+            res.append({k: v})
+        return res
 
+    @staticmethod
+    def __extract_keys(x: str | dict | list):
+        if type(x) is str:
+            return {x: None}
+        elif type(x) is dict:
+            return x
+        elif type(x) is list:
+            l = []
+            for e in x:
+                if type(e) == dict:
+                    if len(e) < 1:
+                        continue
+                    for d in Arguments.__separate_dict(e):
+                        s = list(d.items())[0]
+                        l.append((s[0], s[1]))
+                else:
+                    l.append((e, None))
+            return dict(l)
+        else:
+            raise TypeError(f"Unable to extract requirements with type {type(x)}")
+
+    def require(self, x):
         self.__has_requirements = True
+        self._required_args = self.__extract_keys(x)
 
     def optional(self, x):
         if type(x) is str:
@@ -104,7 +125,7 @@ class Arguments:
                                "unsafe. Consider checking `.available()` then `.contains_requirements()` or use "
                                "`.should_error()` before accessing first argument.")
         if self.__enforce_access and (item not in self._required_args.keys() and item not in self._optional_args):
-            raise KeyError(f"Trying to access\"{item}\" which is not required nor optional.")
+            raise KeyError(f"Trying to access \"{item}\" which is not required nor optional.")
         return self._arguments[item]
 
     def get(self, item):
