@@ -70,7 +70,7 @@ class Arguments:
             new_dir = f"\"{at}\" -> \"{k}\""
             if k not in for_exp:
                 return True, new_dir
-            if type(v) == dict:
+            if type(v) == dict and for_exp[k] is not None:
                 unexpected, loc = cls.__contains_unexpected(for_exp[k], in_args[k], at=new_dir)
                 if unexpected:
                     return True, loc
