@@ -28,8 +28,14 @@ class ArgumentsDict(dict):
         else:
             return self._raw[item]
 
-    def contains_all(self):
-        return all(x in self._raw.keys() for x in self._req.keys())
+    def contains_all(self, strict: bool = False) -> bool:
+        if strict and self._req is None:
+            raise RuntimeError("Cannot use `.contain_all()` here because no requirements or optional values are "
+                               "defined at this level.")
+        elif self._req is None:
+            return True
+        else:
+            return all(x in self._raw.keys() for x in self._req.keys())
 
 
 class ArgumentsExtractor:
@@ -194,6 +200,8 @@ class Arguments:
                 else:
                     as_list.append((e, None))
             return dict(as_list)
+        elif x is None:
+            return None
         else:
             raise TypeError(f"Unable to extract arguments with type {type(x)}")
 
