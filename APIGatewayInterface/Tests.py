@@ -54,3 +54,7 @@ def event_from_dict(data: Dict[str, Any]) -> Dict[str, Any]:
     return {
         "body": json.dumps(data)
     }
+
+
+def pause():
+    input("PAUSED: [Enter] to Continue")
