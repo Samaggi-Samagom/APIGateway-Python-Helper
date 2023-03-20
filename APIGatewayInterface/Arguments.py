@@ -174,7 +174,10 @@ class Arguments:
             raise KeyError(f"Trying to access \"{item}\" which is not required nor optional.")
 
         if type(self._arguments[item]) == dict:
-            return ArgumentsDict(self._arguments[item], self._required_args[item], self.__enforce_access)
+            if item in self._required_args:
+                return ArgumentsDict(self._arguments[item], self._required_args[item], self.__enforce_access)
+            else:
+                return self._arguments[item]
         else:
             return self._arguments[item]
 
