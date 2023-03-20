@@ -1,6 +1,6 @@
 from __future__ import annotations
 from APIGatewayInterface.Responses import MissingArguments, BadRequest, response
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Tuple
 import json
 import copy
 
@@ -18,7 +18,7 @@ class ArgumentsDict(dict):
             return self._raw[item]
 
         if self._enforce_access and item not in self._req.keys():
-            raise KeyError(f"Trying to access \"{item}\" which is nested within a required member but not required.")
+            raise KeyError(f"Trying to access \"{item}\" which is not required nor optional.")
 
         if item not in self._raw:
             raise KeyError(f"Key \"{item}\" does not exist in dictionary.")
@@ -32,14 +32,29 @@ class ArgumentsDict(dict):
         return all(x in self._raw.keys() for x in self._req.keys())
 
 
+class ArgumentsExtractor:
+
+    def __init__(self, strict_access: bool, strict_unexpected: bool):
+        self.__sa = strict_access
+        self.__su = strict_unexpected
+
+    def from_event(self, e: Dict[str, Any], strict_access: bool = None, strict_unexpected: bool = None) -> Arguments:
+        if strict_access is None:
+            strict_access = self.__sa
+        if strict_unexpected is None:
+            strict_unexpected = self.__su
+        return Arguments(e, strict_access, strict_unexpected)
+
+
 class Arguments:
 
-    def __init__(self, event: Dict[str, Any], strict_access: bool = True):
+    def __init__(self, event: Dict[str, Any], strict_access: bool = True, strict_unexpected: bool = True):
         self._required_args = {}
         self._optional_args = {}
         self.error = None
         self._arguments = self._get_arguments(event)
         self.__enforce_access = strict_access
+        self.__enforce_unexpected = strict_unexpected
         self.__has_requirements = False
         self.__checked_available = False
         self.__checked_requirements = False
@@ -48,8 +63,37 @@ class Arguments:
         self.__checked_available = True
         return self._arguments is not None
 
+    @classmethod
+    def __contains_unexpected(cls, for_exp: Dict[str, str | dict | None], in_args: Dict[str, Any],
+                              at: str = "REQUEST") -> Tuple[bool, str]:
+        for k, v in in_args.items():
+            new_dir = f"\"{at}\" -> \"{k}\""
+            if k not in for_exp:
+                return True, new_dir
+            if type(v) == dict:
+                unexpected, loc = cls.__contains_unexpected(for_exp[k], in_args[k], at=new_dir)
+                if unexpected:
+                    return True, loc
+        return False, ""
+
+    def contains_unexpected(self):
+        comb = self.__combine_args(self._required_args, self._optional_args)
+        unexpected, loc = self.__contains_unexpected(for_exp=comb, in_args=self._arguments)
+        if unexpected:
+            if self.error is None:
+                self.error = response(BadRequest(
+                    reason="Unexpected Argument Received",
+                    data={
+                        "at": loc
+                    }
+                ))
+            return True
+        else:
+            return False
+
     def should_error(self):
-        return not self.available() or not self.contains_requirements()
+        return not self.available() or not self.contains_requirements() or \
+            (self.contains_unexpected() and self.__enforce_unexpected)
 
     def _get_arguments(self, event: Dict[str, Any]):
         cleaned_body = event["body"].replace("\n", "")
