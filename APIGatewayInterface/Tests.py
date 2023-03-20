@@ -35,6 +35,10 @@ class APIGatewayTestResponse:
     def __pretty(d: Dict[str, Any]) -> str:
         return json.dumps(d, sort_keys=True, indent=4, cls=DecimalEncoder)
 
+    def break_on_error(self):
+        if self.status_code != 200:
+            raise RuntimeError("Server returned an error.")
+
 
 def post_to(func: Callable[[Dict[str, Any], Any], Dict[str, Any]], data: Dict[str, Any], context: Any = None,
             quiet: bool = False) -> APIGatewayTestResponse:
