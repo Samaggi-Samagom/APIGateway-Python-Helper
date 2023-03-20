@@ -1,10 +1,8 @@
 from __future__ import annotations
-
-import copy
-
 from APIGatewayInterface.Responses import MissingArguments, BadRequest, response
 from typing import Dict, List, Any
 import json
+import copy
 
 
 class ArgumentsDict(dict):
@@ -16,6 +14,9 @@ class ArgumentsDict(dict):
         self._enforce_access = enforce_access
 
     def __getitem__(self, item):
+        if self._req is None:
+            return self._raw[item]
+
         if self._enforce_access and item not in self._req.keys():
             raise KeyError(f"Trying to access \"{item}\" which is nested within a required member but not required.")
 
@@ -27,12 +28,15 @@ class ArgumentsDict(dict):
         else:
             return self._raw[item]
 
+    def contains_all(self):
+        return all(x in self._raw.keys() for x in self._req.keys())
+
 
 class Arguments:
 
     def __init__(self, event: Dict[str, Any], strict_access: bool = True):
         self._required_args = {}
-        self._optional_args = []
+        self._optional_args = {}
         self.error = None
         self._arguments = self._get_arguments(event)
         self.__enforce_access = strict_access
@@ -61,8 +65,11 @@ class Arguments:
             ))
             return None
 
-    def contains(self, expected_parameters: List[str]):
-        return all(x in self._arguments for x in expected_parameters)
+    def contains(self, p: List[str] | str):
+        if type(p) == list:
+            return all(x in self._arguments for x in p)
+        else:
+            return p in self._arguments
 
     def contains_requirements(self):
         if not self.__checked_available and self.__enforce_access:
@@ -144,19 +151,14 @@ class Arguments:
                     as_list.append((e, None))
             return dict(as_list)
         else:
-            raise TypeError(f"Unable to extract requirements with type {type(x)}")
+            raise TypeError(f"Unable to extract arguments with type {type(x)}")
 
     def require(self, x):
         self.__has_requirements = True
         self._required_args = self.__extract_keys(x)
 
     def optional(self, x):
-        if type(x) is str:
-            self._optional_args = [x]
-        elif type(x) is list:
-            self._optional_args = x
-        else:
-            raise TypeError("`optional()` must be supplied with type str or list.")
+        self._optional_args = self.__extract_keys(x)
 
     def requirements(self):
         return self._required_args
@@ -164,18 +166,39 @@ class Arguments:
     def optionals(self):
         return self._optional_args
 
+    @classmethod
+    def __combine_args(cls, x: Dict[str, str | Dict | None], y: Dict[str, str | Dict | None]):
+        out = {}
+        for key, value in x.items():
+            if key in y:
+                if type(value) != dict or type(y[key]) != dict:
+                    raise TypeError("Unable to combine args due to conflicting types.")
+                out[key] = cls.__combine_args(value, y[key])
+            else:
+                out[key] = value
+        for key, value in y.items():
+            if key not in out:
+                out[key] = value
+        return out
+
     def __getitem__(self, item):
         if self.__enforce_access and self.__has_requirements and \
                 (not self.__checked_available or not self.__checked_requirements):
             raise RuntimeError("Accessing arguments before checking availability or requirements is potentially "
                                "unsafe. Consider checking `.available()` then `.contains_requirements()` or use "
                                "`.should_error()` before accessing first argument.")
-        if self.__enforce_access and (item not in self._required_args.keys() and item not in self._optional_args):
+        if self.__enforce_access and (item not in self._required_args.keys() and
+                                      item not in self._optional_args.keys()):
             raise KeyError(f"Trying to access \"{item}\" which is not required nor optional.")
 
         if type(self._arguments[item]) == dict:
-            if item in self._required_args:
+            if item in self._required_args and item in self._optional_args:
+                comb_args = self.__combine_args(self._required_args, self._optional_args)
+                return ArgumentsDict(self._arguments[item], comb_args[item], self.__enforce_access)
+            elif item in self._required_args:
                 return ArgumentsDict(self._arguments[item], self._required_args[item], self.__enforce_access)
+            elif item in self._optional_args:
+                return ArgumentsDict(self._arguments[item], self._optional_args[item], self.__enforce_access)
             else:
                 return self._arguments[item]
         else:
