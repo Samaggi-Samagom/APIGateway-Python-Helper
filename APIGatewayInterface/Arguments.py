@@ -29,7 +29,7 @@ class ArgumentsDict(dict):
             return self._raw[item]
 
     def contains(self, x):
-        return x in self._req.keys()
+        return x in self._raw.keys()
 
     def contains_all(self, strict: bool = False) -> bool:
         if strict and self._req is None:
