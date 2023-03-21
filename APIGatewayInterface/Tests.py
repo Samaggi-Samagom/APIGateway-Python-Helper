@@ -1,6 +1,6 @@
 import json
 from typing import Dict, Any, Callable
-from APIGatewayInterface.Responses import DecimalEncoder
+from APIGatewayInterface.Responses import APIEncoder
 
 
 class APIGatewayTestResponse:
@@ -33,7 +33,7 @@ class APIGatewayTestResponse:
 
     @staticmethod
     def __pretty(d: Dict[str, Any]) -> str:
-        return json.dumps(d, sort_keys=True, indent=4, cls=DecimalEncoder)
+        return json.dumps(d, sort_keys=True, indent=2, cls=APIEncoder)
 
     def break_on_error(self):
         if self.status_code != 200:

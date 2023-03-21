@@ -1,6 +1,6 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any
 import json
 import decimal
 
@@ -54,7 +54,7 @@ class Response(ABC):
                 "body": json.dumps({
                     "message": self.message(),
                     "data": data
-                }, cls=DecimalEncoder)
+                }, cls=APIEncoder)
             }
 
         if allow_cors:
