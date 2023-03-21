@@ -5,11 +5,13 @@ import json
 import decimal
 
 
-class DecimalEncoder(json.JSONEncoder):
+class APIEncoder(json.JSONEncoder):
     def default(self, o):
         if isinstance(o, decimal.Decimal):
             return str(o)
-        return super(DecimalEncoder, self).default(o)
+        if isinstance(o, set):
+            return list(o)
+        return super(APIEncoder, self).default(o)
 
 
 class Response(ABC):
