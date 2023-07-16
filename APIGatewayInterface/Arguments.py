@@ -28,6 +28,12 @@ class ArgumentsDict(dict):
         else:
             return self._raw[item]
 
+    def unwrap(self, item: str, default: Any = None) -> Any:
+        if self.contains(item):
+            return self[item]
+        else:
+            return default
+
     def contains(self, x):
         return x in self._raw.keys()
 
@@ -85,7 +91,7 @@ class Arguments:
                     return True, loc
         return False, ""
 
-    def contains_unexpected(self):
+    def contains_unexpected(self) -> bool:
         comb = self.__combine_args(self._required_args, self._optional_args)
         unexpected, loc = self.__contains_unexpected(for_exp=comb, in_args=self._arguments)
         if unexpected:
@@ -100,7 +106,7 @@ class Arguments:
         else:
             return False
 
-    def should_error(self):
+    def should_error(self) -> bool:
         return not self.available() or not self.contains_requirements() or \
             (self.contains_unexpected() and self.__enforce_unexpected)
 
@@ -118,13 +124,13 @@ class Arguments:
             ))
             return None
 
-    def contains(self, p: List[str] | str):
+    def contains(self, p: List[str] | str) -> bool:
         if type(p) == list:
             return all(x in self._arguments for x in p)
         else:
             return p in self._arguments
 
-    def contains_requirements(self):
+    def contains_requirements(self) -> bool:
         if not self.__checked_available and self.__enforce_access:
             raise RuntimeError("Must check if arguments are available before checking requirements.")
 
@@ -220,6 +226,17 @@ class Arguments:
 
     def optionals(self):
         return self._optional_args
+
+    def unwrap(self, item: str, default: Any = None) -> Any:
+        if item in self._required_args:
+            raise KeyError(f"Cannot unwrap \"{item}\" which is not an optional value/")
+        if item not in self._optional_args:
+            raise KeyError(f"Cannot unwrap \"{item}\" which is not required nor optional.")
+
+        if self.contains(item):
+            return self[item]
+        else:
+            return default
 
     @classmethod
     def __combine_args(cls, x: Dict[str, str | Dict | None], y: Dict[str, str | Dict | None]):
