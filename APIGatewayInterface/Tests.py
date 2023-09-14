@@ -1,5 +1,6 @@
 import json
 import time
+import warnings
 from typing import Dict, Any, Callable
 from APIGatewayInterface.Responses import APIEncoder
 
@@ -7,6 +8,12 @@ from APIGatewayInterface.Responses import APIEncoder
 class APIGatewayTestResponse:
 
     def __init__(self, data: Dict[str, Any], function_name: str, start_time: float):
+        if data is None:
+            warnings.warn("The lambda function did not return a value.")
+
+            data = {
+                "body": ""
+            }
         self.__function_name = function_name
         self.__body = json.loads(data["body"])
         self.__data = self.body["data"] if "data" in self.body else None
