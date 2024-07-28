@@ -150,6 +150,19 @@ class NotFound(ErrorResponse):
     def message():
         return "Not Found"
 
+class Conflict(ErrorResponse):
+
+    def __init__(self, reason: str, conflict_reason: str, at: str = "UNKNOWN"):
+        super().__init__(reason, {"conflictReason": conflict_reason, "at": at})
+
+    @staticmethod
+    def status_code():
+        return 409
+
+    @staticmethod
+    def message():
+        return "Conflict"
+
 
 class Unauthorised(ErrorResponse):
 
