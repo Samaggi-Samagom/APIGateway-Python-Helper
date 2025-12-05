@@ -4,8 +4,8 @@ with open("README.md", 'r') as f:
     long_description = f.read()
 
 setup(
-   name='APIGatewayHelper',
-   version='1.1.27a',
+   name='APIGatewayInterface',
+   version='1.1.27b',
    description='Code for extracting arguments from POST requests to API Gateway and for returning values through '
                'API Gateway',
    long_description=long_description,
