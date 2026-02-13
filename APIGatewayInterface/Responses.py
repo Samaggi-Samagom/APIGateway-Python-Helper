@@ -29,11 +29,13 @@ class Response(ABC):
     @staticmethod
     def _cors(data: Dict[str, Any]):
         data["headers"] = {
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Methods': '*',
-            "Access-Control-Allow-Credentials": True
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Headers": "Content-Type,Authorization",
+            "Access-Control-Allow-Methods": "OPTIONS,GET,POST,PUT,DELETE"
         }
         return data
+
+
 
     def _clean_keys(self, d: Dict[str, Any]):
         new_dict = {}
@@ -57,21 +59,9 @@ class Response(ABC):
                 }, cls=APIEncoder)
             }
 
-        if allow_cors:
-            print(self._cors(data))
-            return self._cors(data)
-        else:
-            print(data)
-            return data
-
-
-def cors(data: Dict[str, Any]):
-    data["headers"] = {
-        'Access-Control-Allow-Headers': 'Content-Type,authorisation',
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': '*'
-    }
-    return data
+        data = self._cors(data)
+        print(data)
+        return data
 
 
 class Success(Response):
